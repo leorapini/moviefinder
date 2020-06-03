@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block main %}
+	
+	<h1>Results for {{ original_genre }}</h1>
+
+	{% for genre in genres %}
+	<br>
+	<h4> {{ original_genre }} with {{ genre }} </h4>
+	<table class="table table-borderless">
+		<tr>
+			{% for movie in movies %}
+				{% if movie["genre"] == genre %}
+				<td><a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank"><img src="{{ movie['poster'] }}"></a><br>{{ movie["primaryTitle"] }}</td>
+				{% endif %}
+			{% endfor %}
+		<tr>
+	</table>
+	{% endfor %}
+
+{% endblock %}
