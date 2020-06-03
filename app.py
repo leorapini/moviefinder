@@ -31,42 +31,18 @@ def index():
 	# Check if method is sending info
 	if request.method == "POST":
 		
-		# Get user choice from form
+		# Get user's genre choice from form
 		original_genre = request.form.get("genre")
 
-		# List variable to store movie results
-		movies = []
+		# Query database for 9 movies in original_genre
+		movies = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND ratings.averageRating > 6.4 AND ratings.numVotes > 100000 ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12", original_genre = original_genre)
 
-		# List variable to store genre results
-		genres = []
+		# Check lenght of movies ()
+		if len(movies) < 9:
 
-		print("Begin", datetime.now().time())
-
-		# Find crossgenres for chosen genre 
-		crossgenres = db.execute("SELECT ogenre, cgenre, matches FROM crossgenre WHERE ogenre = :ogenre AND matches != 0 ORDER BY matches DESC LIMIT 5", ogenre = original_genre)
-
-		# Loop over top 5 genre matches
-		for cgenre in crossgenres: 
-
-			# Query database for movies in original_genre matching each genre in top 5 LIMIT 3 per crossgenre
-			movies_in_genre = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) AND ratings.averageRating > 6.4 AND ratings.numVotes > 100000 ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 3", original_genre = original_genre, cgenre = cgenre["cgenre"])
-
-			# Check lenght of movies_in_genre
-			if len(movies_in_genre) != 0:
-
-				# Add genre to final genres list
-				genres.append(cgenre["cgenre"])
-
-				# Loop over each film in movies_in_genre
-				for movie in movies_in_genre:
-
-					# Append each item and add genre item
-					movies.append({'primaryTitle': movie["primaryTitle"], 'tconst': movie["tconst"], 'poster': movie["poster"], 'genre': cgenre["cgenre"]})
-
-			else:
-				pass
-
-		print("End", datetime.now().time())
+			# Make search less restrictive
+			movies = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND ratings.averageRating > 6.4 AND ratings.numVotes > 10000 ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12", original_genre = original_genre)
+				
 		
 		# Generate Movie Posters URLs
 		for movie in movies:
@@ -103,7 +79,7 @@ def index():
 
 
 		# Render template for results
-		return render_template("results.html", movies = movies, original_genre = original_genre, genres = genres)
+		return render_template("results.html", movies = movies, original_genre = original_genre)
 	
 	# Request method is GET
 	else:
@@ -113,6 +89,91 @@ def index():
 
 		# Return index template
 		return render_template("index.html", genres = genres)
+
+"""
+# Crossgenres Machine
+@app.route("/crossgenres", methods=["GET", "POST"])
+def index():
+	
+	# Check if method is sending info
+	if request.method == "POST":
+		
+		# Get user choice from form
+		original_genre = request.form.get("genre")
+
+		# List variable to store movie results
+		movies = []
+
+		# List variable to store genre results
+		genres = []
+
+		# Find crossgenres for chosen genre 
+		crossgenres = db.execute("SELECT ogenre, cgenre, matches FROM crossgenre WHERE ogenre = :ogenre AND matches != 0 ORDER BY matches DESC LIMIT 5", ogenre = original_genre)
+
+		# Loop over top 5 genre matches
+		for cgenre in crossgenres: 
+
+			# Query database for movies in original_genre matching each genre in top 5 LIMIT 3 per crossgenre
+			movies_in_genre = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) AND ratings.averageRating > 6.4 AND ratings.numVotes > 100000 ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 3", original_genre = original_genre, cgenre = cgenre["cgenre"])
+
+			# Check lenght of movies_in_genre
+			if len(movies_in_genre) != 0:
+
+				# Add genre to final genres list
+				genres.append(cgenre["cgenre"])
+
+				# Loop over each film in movies_in_genre
+				for movie in movies_in_genre:
+
+					# Append each item and add genre item
+					movies.append({'primaryTitle': movie["primaryTitle"], 'tconst': movie["tconst"], 'poster': movie["poster"], 'genre': cgenre["cgenre"]})
+
+			else:
+				pass
+
+		
+		# Generate Movie Posters URLs
+		for movie in movies:
+
+			# Check if movie already doesn't have a poster
+			if movie["poster"] == "\\N":
+
+				# Define URL for BeautifulSoup 
+				url = "https://www.imdb.com/title/" + movie["tconst"] + "/"
+
+				# Create response variable for urllib request
+				with urllib.request.urlopen(url) as response:
+
+					# Variables for parsing
+					html = response.read()
+					soup = BeautifulSoup(html, 'html.parser')
+
+					try:
+
+						# Get image URL from html file
+						image_url = soup.find('div', class_='poster').a.img['src']
+
+						# Add poster key with url item do each movie list item
+						movie["poster"] = image_url
+
+						# Add poster URL to Database
+						db.execute("UPDATE movies SET poster = :poster WHERE tconst = :tconst", poster = image_url, tconst = movie["tconst"])
+
+					except AttributeError:
+
+						movie["poster"] = "/static/notfound.jpg"
+
+						pass
+
+
+		# Render template for results
+		return render_template("crossgenres.html", movies = movies, original_genre = original_genre, genres = genres)
+
+	# If method = GET
+	else:
+		return "You should select a genre"
+"""
+
 
 
 

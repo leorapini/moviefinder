@@ -8,7 +8,7 @@
 			<h5>Choose Genre</h5>
 			<select class="form-control" name="genre">
 				{% for genre in genres %}
-					{% if genre["genre"] != "\\N" %}
+					{% if genre["genre"] != "\\N" and genre["genre"] != "Talk-Show" and genre["genre"] != "Game-Show" %}
 						<option>{{ genre["genre"] }}</option>
 					{% endif %}
 				{% endfor %}

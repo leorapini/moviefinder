@@ -3,19 +3,17 @@
 {% block main %}
 	
 	<h1>Results for {{ original_genre }}</h1>
-
-	{% for genre in genres %}
 	<br>
-	<h4> {{ original_genre }} with {{ genre }} </h4>
 	<table class="table table-borderless">
+		{% for movie_row in movies | batch(4, '&nbsp;') %}
 		<tr>
-			{% for movie in movies %}
-				{% if movie["genre"] == genre %}
-				<td><a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank"><img src="{{ movie['poster'] }}"></a><br>{{ movie["primaryTitle"] }}</td>
-				{% endif %}
+			{% for movie in movie_row %}
+				<td><a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank"><img src="{{ movie['poster'] }}"></a>
+					<br>{{ movie["primaryTitle"] }}</td>
 			{% endfor %}
 		<tr>
+		{% endfor %}
 	</table>
-	{% endfor %}
+
 
 {% endblock %}
