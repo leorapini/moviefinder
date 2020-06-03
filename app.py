@@ -34,14 +34,40 @@ def index():
 		# Get user's genre choice from form
 		original_genre = request.form.get("genre")
 
+		# Get user's level of coolness from form
+		coolness = request.form.get("coolness")
+
+		# numVotes variables for database search
+		maxNumVotes = 0
+		minNumVotes = 0
+
+		# Check coolness level a set appropriate max and min amount of votes
+		if coolness == "Popular":
+
+			maxNumVotes = 100000000
+			minNumVotes = 350000
+
+		elif coolness == "Not So Popular":
+
+			maxNumVotes = 350000
+			minNumVotes = 100000
+
+		elif coolness == "Almost Unknown":
+
+			maxNumVotes = 100000
+			minNumVotes = 10000
+
+
 		# Query database for 9 movies in original_genre
-		movies = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND ratings.averageRating > 6.4 AND ratings.numVotes > 100000 ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12", original_genre = original_genre)
+		movies = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND ratings.averageRating > 6.4 AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12", 
+			                original_genre = original_genre, minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
 
 		# Check lenght of movies ()
 		if len(movies) < 9:
 
 			# Make search less restrictive
-			movies = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND ratings.averageRating > 6.4 AND ratings.numVotes > 10000 ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12", original_genre = original_genre)
+			movies = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND ratings.averageRating > 6.4 AND ratings.numVotes > 50000 ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12", 
+				                original_genre = original_genre)
 				
 		
 		# Generate Movie Posters URLs
@@ -79,7 +105,7 @@ def index():
 
 
 		# Render template for results
-		return render_template("results.html", movies = movies, original_genre = original_genre)
+		return render_template("results.html", movies = movies, original_genre = original_genre, coolness = coolness)
 	
 	# Request method is GET
 	else:
@@ -90,10 +116,10 @@ def index():
 		# Return index template
 		return render_template("index.html", genres = genres)
 
-"""
+
 # Crossgenres Machine
 @app.route("/crossgenres", methods=["GET", "POST"])
-def index():
+def crossgenres():
 	
 	# Check if method is sending info
 	if request.method == "POST":
@@ -113,7 +139,7 @@ def index():
 		# Loop over top 5 genre matches
 		for cgenre in crossgenres: 
 
-			# Query database for movies in original_genre matching each genre in top 5 LIMIT 3 per crossgenre
+			# Query database for movies in original_genre matching each genre in top 5 LIMIT  movies per crossgenre
 			movies_in_genre = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) AND ratings.averageRating > 6.4 AND ratings.numVotes > 100000 ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 3", original_genre = original_genre, cgenre = cgenre["cgenre"])
 
 			# Check lenght of movies_in_genre
@@ -172,7 +198,6 @@ def index():
 	# If method = GET
 	else:
 		return "You should select a genre"
-"""
 
 
 

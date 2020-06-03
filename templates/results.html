@@ -2,7 +2,7 @@
 
 {% block main %}
 	
-	<h1>Results for {{ original_genre }}</h1>
+	<h1>Results for {{ coolness }} {{ original_genre }} Films</h1>
 	<br>
 	<table class="table table-borderless">
 		{% for movie_row in movies | batch(4, '&nbsp;') %}
@@ -14,6 +14,9 @@
 		<tr>
 		{% endfor %}
 	</table>
-
+	<form action="/crossgenres" method="POST">
+		<input type="hidden" name="genre" value="{{ original_genre }}">
+		<button class="btn btn-primary" type="submit">Check Cross Genres</button>
+	</form>
 
 {% endblock %}
