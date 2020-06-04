@@ -65,17 +65,16 @@ def index():
 			                   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12""", 
 			                   original_genre = original_genre, minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
 
-		print("Length: ", len(movies))
 
 		# Check lenght of movies ()
-		if len(movies) < 8:
+		if len(movies) < 9:
 
 			# Make search less restrictive
 			movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
 								   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
 								   WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre)
 								   AND ratings.averageRating > 6.0 AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
-								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 4""", 
+								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 6""", 
 				                   original_genre = original_genre, minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
 
 		# Check lenght of movies ()
@@ -86,20 +85,11 @@ def index():
 								   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
 								   WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) 
 								   AND ratings.averageRating > 6.0 AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
-								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 8""", 
+								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 9""", 
 				                   original_genre = original_genre, minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
-				
-		# TEMP TEMP TEMP
-		print(original_genre, coolness)
-
-		def usd(value):
-		    return f"{value:,}"
 
 		# Generate Movie Posters URLs
 		for movie in movies:
-
-			# TEMP TEMP TEMP
-			print(usd(movie["numVotes"]), movie["primaryTitle"])
 
 			# Check if movie already doesn't have a poster
 			if movie["poster"] == "\\N":
@@ -148,8 +138,8 @@ def index():
 
 
 # Crossgenres Machine
-@app.route("/crossgenres", methods=["GET", "POST"])
-def crossgenres():
+@app.route("/crossgenre", methods=["GET", "POST"])
+def crossgenre():
 	
 	# Check if method is sending info
 	if request.method == "POST":
@@ -203,7 +193,7 @@ def crossgenres():
 										    AND movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) 
 										    AND ratings.averageRating > 6.0 
 										    AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
-										    ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 4""", 
+										    ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 3""", 
 										    original_genre = original_genre, cgenre = cgenre["cgenre"], 
 										    minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
 
@@ -258,13 +248,22 @@ def crossgenres():
 
 
 		# Render template for results
-		return render_template("crossgenres.html", movies = movies, original_genre = original_genre, genres = genres)
+		return render_template("crossgenres.html", movies = movies, original_genre = original_genre, genres = genres, coolness = coolness)
 
 	# If method = GET
 	else:
-		return "You should select a genre"
+
+		# Search database for genres list
+		genres = db.execute("SELECT genre FROM genres GROUP BY genre")
+
+		# Render crossgenre template for search
+		return render_template("crossgenre.html", genres = genres)
 
 
+# About Machine
+@app.route("/about")
+def about():
 
+	return render_template("about.html")
 
 	

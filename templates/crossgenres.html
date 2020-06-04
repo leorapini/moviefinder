@@ -2,12 +2,12 @@
 
 {% block main %}
 	
-	<h1>Cross genres for {{ coolness }} {{ original_genre }}</h1>
+	<h1>Cross Genres for {{ coolness }} {{ original_genre }}</h1>
 
 	{% for genre in genres %}
 	<br>
 	<h4> {{ original_genre }} with {{ genre }} </h4>
-	<table class="table table-borderless">
+	<table class="table table-borderless table-fixed">
 		<tr>
 			{% for movie in movies %}
 				{% if movie["genre"] == genre %}

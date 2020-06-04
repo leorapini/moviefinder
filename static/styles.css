@@ -1,3 +1,9 @@
+nav .navbar-brand
+{
+    /* size for brand */
+    font-size: xx-large;
+}
+
 main .form-control
 {
     /* center form controls */
@@ -22,7 +28,14 @@ main img
     max-width: 100%;
 }
 
+table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+
 footer
 {
     margin-bottom: 50px;
 }
+

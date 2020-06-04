@@ -1,11 +1,10 @@
 {% extends "layout.html" %}
 
 {% block main %}
-	<h1> Movie Finder</h1>
 	<br>
 	<form action="/" method="POST">
 		<div class="form-group">
-			<h5>Choose Genre</h5>
+			<h2>Choose Genre</h2>
 			<select class="form-control" name="genre">
 				{% for genre in genres %}
 					{% if genre["genre"] != "\\N" and genre["genre"] != "Talk-Show" and genre["genre"] != "Game-Show" and genre["genre"] != "Reality-TV" and genre["genre"] != "News"%}

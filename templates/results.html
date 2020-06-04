@@ -5,7 +5,7 @@
 	<h1>Results for {{ coolness }} {{ original_genre }} Films</h1>
 	<br>
 	<table class="table table-borderless">
-		{% for movie_row in movies | batch(4, '&nbsp;') %}
+		{% for movie_row in movies | batch(3, '&nbsp;') %}
 		<tr>
 			{% for movie in movie_row %}
 				<td><a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank"><img src="{{ movie['poster'] }}"></a>
@@ -15,10 +15,10 @@
 		{% endfor %}
 	</table>
 	<br>
-	<form action="/crossgenres" method="POST">
+	<form action="/crossgenre" method="POST">
 		<input type="hidden" name="genre" value="{{ original_genre }}">
 		<input type="hidden" name="coolness" value="{{ coolness }}">
-		<button class="btn btn-primary" type="submit">Check Cross Genres</button>
+		<button class="btn btn-primary" type="submit">Find Cross Genres</button>
 	</form>
 
 {% endblock %}
