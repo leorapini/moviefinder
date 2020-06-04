@@ -16,13 +16,12 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 # Ensure responses aren't cached
 @app.after_request
 def after_request(response):
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Expires"] = 0
-    response.headers["Pragma"] = "no-cache"
+    response.headers["Cache-Control"] = "public, must-revalidate, max-age = 120"
     return response
 
 # Load database
 db = SQL("sqlite:///db/movies.db")
+
 
 # Homepage Machine
 @app.route("/", methods=["GET", "POST"])
@@ -45,33 +44,62 @@ def index():
 		if coolness == "Popular":
 
 			maxNumVotes = 100000000
-			minNumVotes = 350000
+			minNumVotes = 400000
 
 		elif coolness == "Not So Popular":
 
-			maxNumVotes = 350000
+			maxNumVotes = 300000
 			minNumVotes = 100000
 
 		elif coolness == "Almost Unknown":
 
 			maxNumVotes = 100000
-			minNumVotes = 10000
+			minNumVotes = 60000
 
 
-		# Query database for 9 movies in original_genre
-		movies = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND ratings.averageRating > 6.4 AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12", 
-			                original_genre = original_genre, minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
+		# Query database for 12 top rated movies in original_genre
+		movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
+			                   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
+			                   WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) 
+			                   AND ratings.averageRating > 6.4 AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes 
+			                   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12""", 
+			                   original_genre = original_genre, minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
+
+		print("Length: ", len(movies))
 
 		# Check lenght of movies ()
-		if len(movies) < 9:
+		if len(movies) < 8:
 
 			# Make search less restrictive
-			movies = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND ratings.averageRating > 6.4 AND ratings.numVotes > 50000 ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12", 
-				                original_genre = original_genre)
+			movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
+								   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
+								   WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre)
+								   AND ratings.averageRating > 6.0 AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
+								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 4""", 
+				                   original_genre = original_genre, minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
+
+		# Check lenght of movies ()
+		elif len(movies) < 12:
+
+			# Make search less restrictive
+			movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
+								   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
+								   WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) 
+								   AND ratings.averageRating > 6.0 AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
+								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 8""", 
+				                   original_genre = original_genre, minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
 				
-		
+		# TEMP TEMP TEMP
+		print(original_genre, coolness)
+
+		def usd(value):
+		    return f"{value:,}"
+
 		# Generate Movie Posters URLs
 		for movie in movies:
+
+			# TEMP TEMP TEMP
+			print(usd(movie["numVotes"]), movie["primaryTitle"])
 
 			# Check if movie already doesn't have a poster
 			if movie["poster"] == "\\N":
@@ -95,7 +123,9 @@ def index():
 						movie["poster"] = image_url
 
 						# Add poster URL to Database
-						db.execute("UPDATE movies SET poster = :poster WHERE tconst = :tconst", poster = image_url, tconst = movie["tconst"])
+						db.execute("""UPDATE movies SET poster = :poster 
+									  WHERE tconst = :tconst""", 
+									  poster = image_url, tconst = movie["tconst"])
 
 					except AttributeError:
 
@@ -127,6 +157,29 @@ def crossgenres():
 		# Get user choice from form
 		original_genre = request.form.get("genre")
 
+		# Get user's level of coolness from form
+		coolness = request.form.get("coolness")
+
+		# numVotes variables for database search
+		maxNumVotes = 0
+		minNumVotes = 0
+
+		# Check coolness level a set appropriate max and min amount of votes
+		if coolness == "Popular":
+
+			maxNumVotes = 100000000
+			minNumVotes = 400000
+
+		elif coolness == "Not So Popular":
+
+			maxNumVotes = 300000
+			minNumVotes = 100000
+
+		elif coolness == "Almost Unknown":
+
+			maxNumVotes = 100000
+			minNumVotes = 60000
+
 		# List variable to store movie results
 		movies = []
 
@@ -134,13 +187,25 @@ def crossgenres():
 		genres = []
 
 		# Find crossgenres for chosen genre 
-		crossgenres = db.execute("SELECT ogenre, cgenre, matches FROM crossgenre WHERE ogenre = :ogenre AND matches != 0 ORDER BY matches DESC LIMIT 5", ogenre = original_genre)
+		crossgenres = db.execute("""SELECT ogenre, cgenre, matches 
+									FROM crossgenre 
+									WHERE ogenre = :ogenre AND matches != 0 
+									ORDER BY matches DESC LIMIT 5""", ogenre = original_genre)
 
 		# Loop over top 5 genre matches
 		for cgenre in crossgenres: 
 
-			# Query database for movies in original_genre matching each genre in top 5 LIMIT  movies per crossgenre
-			movies_in_genre = db.execute("SELECT primaryTitle, movies.tconst, poster FROM movies JOIN ratings ON movies.tconst = ratings.tconst WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) AND movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) AND ratings.averageRating > 6.4 AND ratings.numVotes > 100000 ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 3", original_genre = original_genre, cgenre = cgenre["cgenre"])
+			# Query database for movies in original_genre matching each genre in top 5 LIMIT 4 movies per crossgenre
+			movies_in_genre = db.execute("""SELECT primaryTitle, movies.tconst, poster, averageRating 
+										    FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
+										    WHERE movies.tconst IN 
+										    (SELECT genres.tconst FROM genres WHERE genre = :original_genre) 
+										    AND movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) 
+										    AND ratings.averageRating > 6.0 
+										    AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
+										    ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 4""", 
+										    original_genre = original_genre, cgenre = cgenre["cgenre"], 
+										    minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
 
 			# Check lenght of movies_in_genre
 			if len(movies_in_genre) != 0:
@@ -152,10 +217,9 @@ def crossgenres():
 				for movie in movies_in_genre:
 
 					# Append each item and add genre item
-					movies.append({'primaryTitle': movie["primaryTitle"], 'tconst': movie["tconst"], 'poster': movie["poster"], 'genre': cgenre["cgenre"]})
-
-			else:
-				pass
+					movies.append({'primaryTitle': movie["primaryTitle"], 'tconst': movie["tconst"],
+								   'poster': movie["poster"], 'genre': cgenre["cgenre"], 
+								   'averageRating': movie['averageRating']})
 
 		
 		# Generate Movie Posters URLs
@@ -183,7 +247,8 @@ def crossgenres():
 						movie["poster"] = image_url
 
 						# Add poster URL to Database
-						db.execute("UPDATE movies SET poster = :poster WHERE tconst = :tconst", poster = image_url, tconst = movie["tconst"])
+						db.execute("UPDATE movies SET poster = :poster WHERE tconst = :tconst", 
+									poster = image_url, tconst = movie["tconst"])
 
 					except AttributeError:
 
