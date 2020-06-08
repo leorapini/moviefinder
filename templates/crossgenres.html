@@ -1,23 +1,30 @@
-{% extends "layout.html" %}
+{%- extends "layout.html" %}
 
-{% block main %}
+{%- block main %}
 	
-	<h1>Cross Genres for {{ coolness }} {{ original_genre }}</h1>
+	<h1 class="display-4">{{ coolness }} {{ original_genre }}</h1>
 
-	{% for genre in genres %}
 	<br>
-	<h4> {{ original_genre }} with {{ genre }} </h4>
-	<table class="table table-borderless table-fixed">
-		<tr>
-			{% for movie in movies %}
-				{% if movie["genre"] == genre %}
-				<td><a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank"><img src="{{ movie['poster'] }}"></a>
-					<br><a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">{{ movie["primaryTitle"] }}</a> 
-					(<strong>{{ movie["averageRating"] }}</strong>)</td>
-				{% endif %}
-			{% endfor %}
-		<tr>
-	</table>
-	{% endfor %}
 
-{% endblock %}
+	{%- for genre in genres %}
+	<h4> {{ original_genre }} with {{ genre }}</h4>
+	<table class="table table-borderless">
+		{%- for movie_row in movies | batch(3, '&nbsp;') %}
+			<tr>
+				{%- for movie in movie_row %}
+					{%- if movie['genre'] == genre %}
+					<td>
+						<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank"><img src="{{ movie['poster'] }}"></a>
+						<br>
+						<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">{{ movie["primaryTitle"] }}</a> 
+						<strong>{{ movie["averageRating"] }}</strong>
+					</td>
+					{%- endif %}
+				{%- endfor %}
+			</tr>
+		{%- endfor %}
+	</table>
+	{%- endfor %}
+	<br>
+	<a href="/crossgenre"> Back </a>
+{%- endblock %}

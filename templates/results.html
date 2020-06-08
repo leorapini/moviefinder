@@ -2,14 +2,18 @@
 
 {% block main %}
 	
-	<h1>Results for {{ coolness }} {{ original_genre }} Films</h1>
+	<h1 class="display-4">{{ coolness }} {{ original_genre }} Films</h1>
 	<br>
 	<table class="table table-borderless">
 		{% for movie_row in movies | batch(3, '&nbsp;') %}
 		<tr>
 			{% for movie in movie_row %}
-				<td><a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank"><img src="{{ movie['poster'] }}"></a>
-					<br><a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">{{ movie["primaryTitle"] }}</a> (<strong>{{ movie["averageRating"] }}</strong>)</td>
+				<td>
+					<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank"><img src="{{ movie['poster'] }}"></a>
+					<br>
+					<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">{{ movie["primaryTitle"] }}</a> 
+					<strong>{{ movie["averageRating"] }}</strong>
+				</td>
 			{% endfor %}
 		<tr>
 		{% endfor %}

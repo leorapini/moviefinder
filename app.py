@@ -13,11 +13,20 @@ app = Flask(__name__)
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
-# Ensure responses aren't cached
+@app.after_request
+def after_request(response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Expires"] = 0
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+"""
+# Ensure responses are cached
 @app.after_request
 def after_request(response):
     response.headers["Cache-Control"] = "public, must-revalidate, max-age = 120"
     return response
+"""
 
 # Load database
 db = SQL("sqlite:///db/movies.db")
@@ -40,53 +49,77 @@ def index():
 		maxNumVotes = 0
 		minNumVotes = 0
 
-		# Check coolness level a set appropriate max and min amount of votes
-		if coolness == "Popular":
+		# Low numVotes variable
+		lowNumVotes = 0
 
-			maxNumVotes = 100000000
-			minNumVotes = 400000
 
-		elif coolness == "Not So Popular":
+		# Adjust low numVotes variable do Documentary
+		if original_genre == "Documentary" or original_genre == "Western":
 
-			maxNumVotes = 300000
-			minNumVotes = 100000
+			if coolness == "Popular":
 
-		elif coolness == "Almost Unknown":
+				maxNumVotes = 100000000
+				minNumVotes = 60000
+				lowNumVotes = 0
 
-			maxNumVotes = 100000
-			minNumVotes = 60000
+			elif coolness == "Not So Popular":
 
+				maxNumVotes = 60000
+				minNumVotes = 25000
+				lowNumVotes = 0
+
+			elif coolness == "Lesser Known":
+
+				maxNumVotes = 25000
+				minNumVotes = 10000
+				lowNumVotes = 0
+
+		else:
+
+			# Check coolness level a set appropriate max and min amount of votes
+			if coolness == "Popular":
+
+				maxNumVotes = 100000000
+				minNumVotes = 400000
+				lowNumVotes = 200000
+
+			elif coolness == "Not So Popular":
+
+				maxNumVotes = 300000
+				minNumVotes = 100000
+				lowNumVotes = 50000
+
+			elif coolness == "Lesser Known":
+
+				maxNumVotes = 100000
+				minNumVotes = 60000
+				lowNumVotes = 30000
 
 		# Query database for 12 top rated movies in original_genre
 		movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
 			                   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
-			                   WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) 
-			                   AND ratings.averageRating > 6.4 AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes 
-			                   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12""", 
-			                   original_genre = original_genre, minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
+			                   WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
+			                   WHERE genre = :original_genre) AND ratings.averageRating > 6.4 
+			                   AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes 
+			                   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 15""", 
+			                   original_genre = original_genre, minNumVotes = minNumVotes, 
+			                   maxNumVotes = maxNumVotes)
 
 
-		# Check lenght of movies ()
-		if len(movies) < 9:
-
-			# Make search less restrictive
-			movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
-								   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
-								   WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre)
-								   AND ratings.averageRating > 6.0 AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
-								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 6""", 
-				                   original_genre = original_genre, minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
-
-		# Check lenght of movies ()
-		elif len(movies) < 12:
+		# Check lenght of movies 
+		if len(movies) < 15:
 
 			# Make search less restrictive
 			movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
 								   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
-								   WHERE movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :original_genre) 
-								   AND ratings.averageRating > 6.0 AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
-								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 9""", 
-				                   original_genre = original_genre, minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
+								   WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
+								   WHERE genre = :original_genre) AND ratings.averageRating > 6.0 
+								   AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
+								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 12""", 
+				                   original_genre = original_genre, minNumVotes = minNumVotes - lowNumVotes, 
+				                   maxNumVotes = maxNumVotes)
+
+		
 
 		# Generate Movie Posters URLs
 		for movie in movies:
@@ -125,7 +158,8 @@ def index():
 
 
 		# Render template for results
-		return render_template("results.html", movies = movies, original_genre = original_genre, coolness = coolness)
+		return render_template("results.html", movies = movies, original_genre = original_genre, 
+							   coolness = coolness)
 	
 	# Request method is GET
 	else:
@@ -154,21 +188,51 @@ def crossgenre():
 		maxNumVotes = 0
 		minNumVotes = 0
 
-		# Check coolness level a set appropriate max and min amount of votes
-		if coolness == "Popular":
+		# Low numVotes variable
+		lowNumVotes = 0
 
-			maxNumVotes = 100000000
-			minNumVotes = 400000
 
-		elif coolness == "Not So Popular":
+		# Adjust low numVotes variable do Documentary
+		if original_genre == "Documentary" or original_genre == "Western":
 
-			maxNumVotes = 300000
-			minNumVotes = 100000
+			if coolness == "Popular":
 
-		elif coolness == "Almost Unknown":
+				maxNumVotes = 100000000
+				minNumVotes = 60000
+				lowNumVotes = 0
 
-			maxNumVotes = 100000
-			minNumVotes = 60000
+			elif coolness == "Not So Popular":
+
+				maxNumVotes = 60000
+				minNumVotes = 25000
+				lowNumVotes = 0
+
+			elif coolness == "Lesser Known":
+
+				maxNumVotes = 25000
+				minNumVotes = 10000
+				lowNumVotes = 0
+
+		else:
+
+			# Check coolness level a set appropriate max and min amount of votes
+			if coolness == "Popular":
+
+				maxNumVotes = 100000000
+				minNumVotes = 400000
+				lowNumVotes = 200000
+
+			elif coolness == "Not So Popular":
+
+				maxNumVotes = 300000
+				minNumVotes = 100000
+				lowNumVotes = 50000
+
+			elif coolness == "Lesser Known":
+
+				maxNumVotes = 100000
+				minNumVotes = 60000
+				lowNumVotes = 30000
 
 		# List variable to store movie results
 		movies = []
@@ -188,12 +252,13 @@ def crossgenre():
 			# Query database for movies in original_genre matching each genre in top 5 LIMIT 4 movies per crossgenre
 			movies_in_genre = db.execute("""SELECT primaryTitle, movies.tconst, poster, averageRating 
 										    FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
-										    WHERE movies.tconst IN 
-										    (SELECT genres.tconst FROM genres WHERE genre = :original_genre) 
-										    AND movies.tconst IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) 
-										    AND ratings.averageRating > 6.0 
-										    AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
-										    ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 3""", 
+										    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
+										    WHERE genre = :original_genre) AND movies.tconst 
+										    IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) 
+										    AND ratings.averageRating > 6.0 AND ratings.numVotes 
+										    BETWEEN :minNumVotes AND :maxNumVotes 
+										    ORDER BY ratings.averageRating DESC, 
+										    ratings.numVotes ASC LIMIT 6""", 
 										    original_genre = original_genre, cgenre = cgenre["cgenre"], 
 										    minNumVotes = minNumVotes, maxNumVotes = maxNumVotes)
 
@@ -211,7 +276,6 @@ def crossgenre():
 								   'poster': movie["poster"], 'genre': cgenre["cgenre"], 
 								   'averageRating': movie['averageRating']})
 
-		
 		# Generate Movie Posters URLs
 		for movie in movies:
 
@@ -246,9 +310,9 @@ def crossgenre():
 
 						pass
 
-
 		# Render template for results
-		return render_template("crossgenres.html", movies = movies, original_genre = original_genre, genres = genres, coolness = coolness)
+		return render_template("crossgenres.html", movies = movies, original_genre = original_genre, 
+							   genres = genres, coolness = coolness)
 
 	# If method = GET
 	else:

@@ -1,3 +1,11 @@
+body
+{
+    background: #ECE9E6;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #FFFFFF, #ECE9E6);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+}
+
 nav .navbar-brand
 {
     /* size for brand */
@@ -10,7 +18,7 @@ main .form-control
     display: inline-block;
 
     /* override Bootstrap's 100% width for form controls */
-    width: auto;
+    width: 190px;
 }
 
 main
@@ -28,11 +36,16 @@ main img
     max-width: 100%;
 }
 
+radio
+{
+    font-size: 2em;
+}
+
+
 table {
     width: 100%;
     table-layout: fixed;
 }
-
 
 footer
 {
