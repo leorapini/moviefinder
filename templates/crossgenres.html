@@ -1,30 +1,55 @@
 {%- extends "layout.html" %}
 
+
 {%- block main %}
 	
-	<h1 class="display-4">{{ coolness }} {{ original_genre }}</h1>
+	<h1 class="display-4">{{ coolness }} {{ original_genre }} Cross Genres</h1>
 
 	<br>
-
 	{%- for genre in genres %}
-	<h4> {{ original_genre }} with {{ genre }}</h4>
+	{% set count = namespace(value=0) %}
+	<form action="/" id="{{ genre }}-search" method="POST">
+		<input type="hidden" name="genre" value='{{ genre }}'>
+		<input type="hidden" name="coolness" value="{{ coolness }}">
+		<h4>{{ original_genre }} with <a href="#" onclick="document.getElementById('{{ genre }}-search').submit()">{{ genre }}</a></h4>
+	</form>
 	<table class="table table-borderless">
-		{%- for movie_row in movies | batch(3, '&nbsp;') %}
 			<tr>
-				{%- for movie in movie_row %}
-					{%- if movie['genre'] == genre %}
-					<td>
-						<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank"><img src="{{ movie['poster'] }}"></a>
-						<br>
-						<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">{{ movie["primaryTitle"] }}</a> 
-						<strong>{{ movie["averageRating"] }}</strong>
-					</td>
-					{%- endif %}
-				{%- endfor %}
+			{%- for movie in movies %}
+				{%- if movie['genre'] == genre %}
+						<td>
+							<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">
+							<img src="{{ movie['poster'] }}"></a>
+							<br>
+							<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">{{ movie["primaryTitle"] }}</a> 
+							(<strong>{{ movie["averageRating"] }}</strong>)
+							{% set count.value = count.value + 1 %}
+						</td>
+					{% if count.value % 3 == 0 %}
+						</tr>
+					{% endif %}
+				{%- endif %}
+			{%- endfor %}
 			</tr>
-		{%- endfor %}
 	</table>
 	{%- endfor %}
 	<br>
-	<a href="/crossgenre"> Back </a>
+	<form action="/crossgenre" id="pop-search" method="POST">
+		<input type="hidden" name="genre" value='{{ original_genre }}'>
+		<input type="hidden" name="coolness" value="Popular">
+	</form>
+	<form action="/crossgenre" id="notso-search" method="POST">
+		<input type="hidden" name="genre" value='{{ original_genre }}'>
+		<input type="hidden" name="coolness" value="Not So Popular">
+	</form>
+	<form action="/crossgenre" id="less-search" method="POST">
+		<input type="hidden" name="genre" value='{{ original_genre }}'>
+		<input type="hidden" name="coolness" value="Lesser Known">
+	</form>
+	<p style="margin-bottom: 10px; font-weight: 200; font-size: 1.3em;">Try another category:</p>
+	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('pop-search').submit()">Popular</button>  
+	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('notso-search').submit()">Not So Popular</button> 
+	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('less-search').submit()">Lesser Known</button>
+	<br><br>
+	<a href="/crossgenre" class="btn btn-primary btn-sm" role="button"> Back to Search </a>
 {%- endblock %}

@@ -18,7 +18,8 @@ main .form-control
     display: inline-block;
 
     /* override Bootstrap's 100% width for form controls */
-    width: 190px;
+    width: 150px;
+
 }
 
 main
@@ -36,11 +37,6 @@ main img
     max-width: 100%;
 }
 
-radio
-{
-    font-size: 2em;
-}
-
 
 table {
     width: 100%;
@@ -52,3 +48,10 @@ footer
     margin-bottom: 50px;
 }
 
+.subtitulo
+{
+    margin-bottom: 50px;
+    margin-top: -10px;
+    font-size: 1.2em;
+    font-weight: 300;
+}

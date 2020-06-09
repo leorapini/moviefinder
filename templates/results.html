@@ -8,21 +8,41 @@
 		{% for movie_row in movies | batch(3, '&nbsp;') %}
 		<tr>
 			{% for movie in movie_row %}
+				{% if movie != "&nbsp;" %}
 				<td>
 					<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank"><img src="{{ movie['poster'] }}"></a>
 					<br>
 					<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">{{ movie["primaryTitle"] }}</a> 
-					<strong>{{ movie["averageRating"] }}</strong>
+					(<strong>{{ movie["averageRating"] }}</strong>)
 				</td>
+				{% endif %}
 			{% endfor %}
 		<tr>
 		{% endfor %}
 	</table>
 	<br>
-	<form action="/crossgenre" method="POST">
+	<form action="/" id="pop-search" method="POST">
+		<input type="hidden" name="genre" value='{{ original_genre }}'>
+		<input type="hidden" name="coolness" value="Popular">
+	</form>
+	<form action="/" id="notso-search" method="POST">
+		<input type="hidden" name="genre" value='{{ original_genre }}'>
+		<input type="hidden" name="coolness" value="Not So Popular">
+	</form>
+	<form action="/" id="less-search" method="POST">
+		<input type="hidden" name="genre" value='{{ original_genre }}'>
+		<input type="hidden" name="coolness" value="Lesser Known">
+	</form>
+	<p style="margin-bottom: 10px; font-weight: 200; font-size: 1.3em;">Try another category:</p>
+	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('pop-search').submit()">Popular</button>  
+	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('notso-search').submit()">Not So Popular</button> 
+	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('less-search').submit()">Lesser Known</button>
+	<br><br>
+	<form action="/crossgenre" id="cross-search" method="POST">
 		<input type="hidden" name="genre" value="{{ original_genre }}">
 		<input type="hidden" name="coolness" value="{{ coolness }}">
-		<button class="btn btn-primary" type="submit">Find Cross Genres</button>
 	</form>
+	<button class="btn btn-primary btn-sm" onclick="document.getElementById('cross-search').submit()">Find Cross Genres</button><br><br>
+	<a href="/" class="btn btn-primary btn-sm" role="button"> Back to Search </a>
 
 {% endblock %}
