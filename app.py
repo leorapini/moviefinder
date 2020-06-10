@@ -346,19 +346,133 @@ def about():
 
 
 # Choose 3 genres machine
-@app.route("/choosethree", methods=["GET", "POST"])
-def about():
+@app.route("/genremix", methods=["GET", "POST"])
+def genremix():
 
 	# Check if sending information
-	if request.method="POST":
+	if request.method == "POST":
 
-		pass
+		# Get user's genre choice from form
+		genremix = request.form.getlist("genres")
+
+		print(len(genremix))
+
+		# Check if user selected 2 or 3 genres
+		if len(genremix) != 2 and len(genremix) != 3:
+
+			# Search database for genres list
+			genres = db.execute("SELECT genre FROM genres GROUP BY genre")
+
+			whoops = "You must choose 2 or 3 genres."
+			return render_template("genremix.html", whoops = whoops, genres = genres)
+
+		# Get user's coolness choice from form
+		coolness = request.form.get("coolness")
+
+		# Number of votes for database search based on coolness factor
+		coolness_votes = {"Popular": {
+									  "maxNumVotes": 100000000, 
+									  "minNumVotes": 60000, 
+									  "lowNumVotes": 0},
+						  	  "Not So Popular": {
+									  "maxNumVotes": 60000, 
+									  "minNumVotes": 25000, 
+									  "lowNumVotes": 0},
+						   	  "Lesser Known": {
+									  "maxNumVotes": 25000, 
+									  "minNumVotes": 10000, 
+									  "lowNumVotes": 0}}
+
+
+		if len(genremix) == 2:
+
+			# Query database for movies in original_genre matching each genre in top 5 LIMIT 4 movies per crossgenre
+			movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, averageRating 
+										    FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
+										    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
+										    WHERE genre = :genre0) AND movies.tconst 
+										    IN (SELECT genres.tconst FROM genres WHERE genre = :genre1) 
+										    AND ratings.averageRating > 6.0 AND ratings.numVotes 
+										    BETWEEN :minNumVotes AND :maxNumVotes 
+										    ORDER BY ratings.averageRating DESC, 
+										    ratings.numVotes ASC LIMIT 18""", 
+										    genre0 = genremix[0], genre1 = genremix[1], 
+										    minNumVotes = coolness_votes[coolness]["minNumVotes"], 
+										    maxNumVotes = coolness_votes[coolness]["maxNumVotes"])
+
+
+		elif len(genremix) == 3:
+
+			# Query database for movies in original_genre matching each genre in top 5 LIMIT 4 movies per crossgenre
+			movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, averageRating 
+										    FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
+										    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
+										    WHERE genre = :genre0) AND movies.tconst 
+										    IN (SELECT genres.tconst FROM genres WHERE genre = :genre1)
+										    AND movies.tconst IN (SELECT genres.tconst FROM genres 
+										    WHERE genre = :genre2)
+										    AND ratings.averageRating > 5.9 AND ratings.numVotes 
+										    BETWEEN :minNumVotes AND :maxNumVotes 
+										    ORDER BY ratings.averageRating DESC, 
+										    ratings.numVotes ASC LIMIT 18""", 
+										    genre0 = genremix[0], genre1 = genremix[1], 
+										    genre2 = genremix[2], 
+										    minNumVotes = coolness_votes[coolness]["minNumVotes"], 
+										    maxNumVotes = coolness_votes[coolness]["maxNumVotes"])
+
+		# If no movies were found
+		else:
+
+			# Return empty movies list
+			movies = []
+
+
+		# Generate Movie Posters URLs
+		for movie in movies:
+
+			# Check if movie already doesn't have a poster
+			if movie["poster"] == "\\N":
+
+				# Define URL for BeautifulSoup 
+				url = "https://www.imdb.com/title/" + movie["tconst"] + "/"
+
+				# Create response variable for urllib request
+				with urllib.request.urlopen(url) as response:
+
+					# Variables for parsing
+					html = response.read()
+					soup = BeautifulSoup(html, 'html.parser')
+
+					try:
+
+						# Get image URL from html file
+						image_url = soup.find('div', class_='poster').a.img['src']
+
+						# Add poster key with url item do each movie list item
+						movie["poster"] = image_url
+
+						# Add poster URL to Database
+						db.execute("UPDATE movies SET poster = :poster WHERE tconst = :tconst", 
+									poster = image_url, tconst = movie["tconst"])
+
+					except AttributeError:
+
+						movie["poster"] = "/static/notfound.jpg"
+
+						pass
+
+
+		return render_template("genremixed.html", genremix = genremix, coolness = coolness, movies = movies)
 
 
 	# Not sending information
 	else:
 
-	return render_template("choosethree.html")
+		# Search database for genres list
+		genres = db.execute("SELECT genre FROM genres GROUP BY genre")
+
+		# Render crossgenre template for search
+		return render_template("genremix.html", genres = genres)
 
 
 

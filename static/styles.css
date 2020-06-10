@@ -18,7 +18,7 @@ main .form-control
     display: inline-block;
 
     /* override Bootstrap's 100% width for form controls */
-    width: 150px;
+    width: auto;
 
 }
 
@@ -55,3 +55,18 @@ footer
     font-size: 1.2em;
     font-weight: 300;
 }
+
+.col-8
+{
+    text-align: left;
+    margin-left: 2em;
+}
+
+.col-2
+{
+    text-align: left;
+    margin-left: -3em;
+}
+
+
+

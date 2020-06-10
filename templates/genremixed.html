@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block main %}
+	<h1 class="display-4">{{ coolness }} {{ genremix[0] }} {{ genremix[1] }} {{ genremix[2] if genremix|length == 3}} Mix</h1>
+
+	<table class="table table-borderless">
+		{% for movie_row in movies | batch(3, '&nbsp;') %}
+		<tr>
+			{% for movie in movie_row %}
+				{% if movie != "&nbsp;" %}
+				<td>
+					<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank"><img src="{{ movie['poster'] }}"></a>
+					<br>
+					<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">{{ movie["primaryTitle"] }}</a> 
+					(<strong>{{ movie["averageRating"] }}</strong>)
+				</td>
+				{% endif %}
+			{% endfor %}
+		<tr>
+		{% endfor %}
+	</table>
+	<br>
+	<form action="/genremix" id="pop-search" method="POST">
+		<input type="hidden" name="genres" value='{{ genremix[0] }}'>
+		<input type="hidden" name="genres" value='{{ genremix[1] }}'>
+		{% if genremix|length == 3 %}
+			<input type="hidden" name="genres" value='{{ genremix[2] }}'>
+		{% endif %}
+		<input type="hidden" name="coolness" value="Popular">
+	</form>
+	<form action="/genremix" id="notso-search" method="POST">
+		<input type="hidden" name="genres" value='{{ genremix[0] }}'>
+		<input type="hidden" name="genres" value='{{ genremix[1] }}'>
+		{% if genremix|length == 3 %}
+			<input type="hidden" name="genres" value='{{ genremix[2] }}'>
+		{% endif %}
+		<input type="hidden" name="coolness" value="Not So Popular">
+	</form>
+	<form action="/genremix" id="less-search" method="POST">
+		<input type="hidden" name="genres" value='{{ genremix[0] }}'>
+		<input type="hidden" name="genres" value='{{ genremix[1] }}'>
+		{% if genremix|length == 3 %}
+			<input type="hidden" name="genres" value='{{ genremix[2] }}'>
+		{% endif %}
+		<input type="hidden" name="coolness" value="Lesser Known">
+	</form>
+	<p style="margin-bottom: 10px; font-weight: 200; font-size: 1.3em;">Try another category:</p>
+	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('pop-search').submit()">Popular</button>  
+	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('notso-search').submit()">Not So Popular</button> 
+	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('less-search').submit()">Lesser Known</button>
+	<br><br>
+	<a href="/genremix" class="btn btn-primary btn-sm" role="button"> Back to Gerne Mix </a>
+
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+
+{% block main %}
+	<h1 class="display-3">Genre Mix</h1>
+	<p class="subtitulo">Find interesting genres combinations.</p>
+	<div class="card border-light mb-3" style="max-width: 18rem; display: inline-block; width: 20em;">
+		<div class="card-body">
+			<form action="/genremix" method="POST">
+				<div class="form-group">
+					<h2> Choose Genres </h2>
+					<p style="font-size: 0.9em; margin-top: -5px;"> Select 2 or 3 options </p>
+					<div class="row">
+						{% set count = namespace(value=0) %}
+						<div class="col-8">
+						{% for genre in genres %}
+						 		{% if genre["genre"] != "\\N" and genre["genre"] != "Talk-Show" and genre["genre"] != "Game-Show" and genre["genre"] != "Reality-TV" and genre["genre"] != "News"%}
+						 			<input class="form-check-input" type="checkbox" value="{{ genre['genre'] }}" id="{{ genre['genre'] }}" name="genres">
+									<label class="form-check-label" for="{{ genre['genre'] }}">
+								    {{ genre['genre'] }}
+									</label><br>
+									{% set count.value = count.value + 1 %}
+								{% endif %}
+							{% if count.value == 11 %}
+								</div>
+								<div class="col-2">
+							{% endif %}
+						{% endfor %}
+						</div>
+					</div>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="radio" name="coolness" value="Popular" checked>
+				  	<label class="form-check-label" for="exampleRadios1">😀&nbsp;&nbsp;Popular Films</label>
+				</div>
+				<div class="form-check">
+				 	<input class="form-check-input" type="radio" name="coolness" value="Not So Popular">
+				  	<label class="form-check-label" for="exampleRadios2">🤓&nbsp;&nbsp;Not so Popular Films</label>
+				</div>
+				<div class="form-check">
+				 	<input class="form-check-input" type="radio" name="coolness" value="Lesser Known">
+				  	<label class="form-check-label" for="exampleRadios2">😎&nbsp;&nbsp;Lesser Known Films</label>
+				</div>
+				<br>
+				<button class="btn btn-primary" type="submit">Search</button>
+			</form>
+		</div>
+	</div>
+
+{% endblock %}
