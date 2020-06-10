@@ -2,7 +2,12 @@
 
 {% block main %}
 	<h1 class="display-4">{{ coolness }} {{ genremix[0] }} {{ genremix[1] }} {{ genremix[2] if genremix|length == 3}} Mix</h1>
-
+	<br>
+	{% if movies|length == 0 %}
+		<p style="font-size: 8em;">😞</p>
+		<p style="margin-top: -30px; margin-bottom: 30px; font-size: 1.1em;"><strong>No movies were found.</strong></p>
+		<br>
+	{% else %}
 	<table class="table table-borderless">
 		{% for movie_row in movies | batch(3, '&nbsp;') %}
 		<tr>
@@ -20,6 +25,7 @@
 		{% endfor %}
 	</table>
 	<br>
+	{% endif %}
 	<form action="/genremix" id="pop-search" method="POST">
 		<input type="hidden" name="genres" value='{{ genremix[0] }}'>
 		<input type="hidden" name="genres" value='{{ genremix[1] }}'>
@@ -50,5 +56,6 @@
 	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('less-search').submit()">Lesser Known</button>
 	<br><br>
 	<a href="/genremix" class="btn btn-primary btn-sm" role="button"> Back to Gerne Mix </a>
+
 
 {% endblock %}

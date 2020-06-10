@@ -13,7 +13,6 @@ app = Flask(__name__)
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
-
 @app.after_request
 def after_request(response):
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -33,9 +32,23 @@ def after_request(response):
 db = SQL("sqlite:///db/movies.db")
 
 
-# Homepage Machine
-@app.route("/", methods=["GET", "POST"])
+# Index
+@app.route("/")
 def index():
+
+	return render_template("index.html")
+
+
+# About
+@app.route("/about")
+def about():
+
+	return render_template("about.html")
+
+
+# Genre Search
+@app.route("/genresearch", methods=["GET", "POST"])
+def genresearch():
 	
 	# Check if method is sending info
 	if request.method == "POST":
@@ -151,11 +164,11 @@ def index():
 		# Search database for genres list
 		genres = db.execute("SELECT genre FROM genres GROUP BY genre")
 
-		# Return index template
-		return render_template("index.html", genres = genres)
+		# Return genre search template
+		return render_template("genresearch.html", genres = genres)
 
 
-# Crossgenres Machine
+# Cross genres 
 @app.route("/crossgenre", methods=["GET", "POST"])
 def crossgenre():
 	
@@ -338,14 +351,10 @@ def crossgenre():
 		return render_template("crossgenre.html", genres = genres)
 
 
-# About Machine
-@app.route("/about")
-def about():
-
-	return render_template("about.html")
 
 
-# Choose 3 genres machine
+
+# Genre Mix
 @app.route("/genremix", methods=["GET", "POST"])
 def genremix():
 

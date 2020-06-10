@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block main %}
+	<h1 class="display-3">Genre Search</h1>
+	<p class="subtitulo">Find the highest rated movies by genre.</p>
+	<div class="card border-light mb-3" style="max-width: 18rem; display: inline-block;">
+		<div class="card-body">
+			<form action="/genresearch" method="POST">
+				<div class="form-group">
+					<h3> Choose Genre </h3>
+					<select class="form-control" name="genre">
+						{% for genre in genres %}
+							{% if genre["genre"] != "\\N" and genre["genre"] != "Talk-Show" and genre["genre"] != "Game-Show" and genre["genre"] != "Reality-TV" and genre["genre"] != "News"%}
+								<option>{{ genre["genre"] }}</option>
+							{% endif %}
+						{% endfor %}
+					</select>
+				</div>
+				<br>
+				<div class="form-check">
+					<input class="form-check-input" type="radio" name="coolness" value="Popular" checked>
+				  	<label class="form-check-label" for="exampleRadios1">😀&nbsp;&nbsp;Popular Films</label>
+				</div>
+				<div class="form-check">
+				 	<input class="form-check-input" type="radio" name="coolness" value="Not So Popular">
+				  	<label class="form-check-label" for="exampleRadios2">🤓&nbsp;&nbsp;Not so Popular Films</label>
+				</div>
+				<div class="form-check">
+				 	<input class="form-check-input" type="radio" name="coolness" value="Lesser Known">
+				  	<label class="form-check-label" for="exampleRadios2">😎&nbsp;&nbsp;Lesser Known Films</label>
+				</div>
+				<br>
+				<button class="btn btn-primary" type="submit">Search</button>
+			</form>
+		</div>
+	</div>
+	
+{% endblock %}

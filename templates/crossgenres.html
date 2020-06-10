@@ -4,11 +4,10 @@
 {%- block main %}
 	
 	<h1 class="display-4">{{ coolness }} {{ original_genre }} Cross Genres</h1>
-
 	<br>
 	{%- for genre in genres %}
 	{% set count = namespace(value=0) %}
-	<form action="/" id="{{ genre }}-search" method="POST">
+	<form action="/genresearch" id="{{ genre }}-search" method="POST">
 		<input type="hidden" name="genre" value='{{ genre }}'>
 		<input type="hidden" name="coolness" value="{{ coolness }}">
 		<h3>{{ original_genre }} with <a href="#" onclick="document.getElementById('{{ genre }}-search').submit()">{{ genre }}</a></h3>

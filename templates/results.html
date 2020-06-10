@@ -21,15 +21,15 @@
 		{% endfor %}
 	</table>
 	<br>
-	<form action="/" id="pop-search" method="POST">
+	<form action="/genresearch" id="pop-search" method="POST">
 		<input type="hidden" name="genre" value='{{ original_genre }}'>
 		<input type="hidden" name="coolness" value="Popular">
 	</form>
-	<form action="/" id="notso-search" method="POST">
+	<form action="/genresearch" id="notso-search" method="POST">
 		<input type="hidden" name="genre" value='{{ original_genre }}'>
 		<input type="hidden" name="coolness" value="Not So Popular">
 	</form>
-	<form action="/" id="less-search" method="POST">
+	<form action="/genresearch" id="less-search" method="POST">
 		<input type="hidden" name="genre" value='{{ original_genre }}'>
 		<input type="hidden" name="coolness" value="Lesser Known">
 	</form>
@@ -43,6 +43,6 @@
 		<input type="hidden" name="coolness" value="{{ coolness }}">
 	</form>
 	<button class="btn btn-primary btn-sm" onclick="document.getElementById('cross-search').submit()">Find Cross Genres</button><br><br>
-	<a href="/" class="btn btn-primary btn-sm" role="button"> Back to Genre Search </a>
+	<a href="/genresearch" class="btn btn-primary btn-sm" role="button"> Back to Genre Search </a>
 
 {% endblock %}

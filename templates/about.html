@@ -2,7 +2,26 @@
 
 {% block main %}
 
-	<p> Hey, it's me. </p>
+	<h1 class="display-4">About</h1>
+
+	<p style="margin-top: 30px">Finding a movie to watch is hard. We've all been there. According to IMDB, about 2,577 movies are realeased worldwide every year. That's about 7 movies a day. Good luck finding something to watch tonight.</p>
+
+	<p><strong>Movie Finder</strong> helps you find interesting movies to watch by creatively exploring IMDB's (post 2000) movie database.</p>
+
+	<p>Through <a href="/genresearch">Genre Search</a> you can find the highest rated movies by genre. <a href="/crossgenre">Cross Genre Search </a> helps you find movies by exploring the most common cross genres for each genre you select. <a href="/genremix">Genre Mix</a> is your opportunity to explore unique genre combinations such as <a href="#" onclick="document.getElementById('less-search').submit()">this one</a>.</p>
+
+	<p>You may also choose between Popular Films, Not so Popular Films, and Lesser Known Films. These categories are based on the amount of votes each film has received on IMDB.</p>
+
+	<p>Click away and I hope you find something interesting to watch. If you have any questions and/or suggestions, please e-mail me at leorapini [[@]] gmail. com.</p>
+
+	<p> </p>
+
+	<form action="/genremix" id="less-search" method="POST">
+		<input type="hidden" name="genres" value='Comedy'>
+		<input type="hidden" name="genres" value='Crime'>
+		<input type="hidden" name="genres" value='Thriller'>
+		<input type="hidden" name="coolness" value="Popular">
+	</form>
 
 {% endblock %}
 
