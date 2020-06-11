@@ -21,7 +21,7 @@
 				</td>
 				{% endif %}
 			{% endfor %}
-		<tr>
+		</tr>
 		{% endfor %}
 	</table>
 	<br>
@@ -50,12 +50,36 @@
 		{% endif %}
 		<input type="hidden" name="coolness" value="Lesser Known">
 	</form>
+	
 	<p style="margin-bottom: 10px; font-weight: 200; font-size: 1.3em;">Try another category:</p>
-	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('pop-search').submit()">Popular</button>  
-	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('notso-search').submit()">Not So Popular</button> 
-	<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('less-search').submit()">Lesser Known</button>
-	<br><br>
+	<button type="button" class="btn btn-primary btn-sm" onclick="popsubmit()">Popular</button>  
+	<button type="button" class="btn btn-primary btn-sm" onclick="notsosubmit();">Not So Popular</button> 
+	<button type="button" class="btn btn-primary btn-sm" onclick="lesssubmit();">Lesser Known</button>
+	<br></br><div id="loading" class="loading"></div>
 	<a href="/genremix" class="btn btn-primary btn-sm" role="button"> Back to Gerne Mix </a>
+
+	<script type="text/javascript">
+            function lesssubmit() {
+            	document.getElementById('less-search').submit();
+            	setTimeout(
+            		function () {
+            		document.getElementById('loading').innerHTML = 'Just a couple more seconds 😁';}, 2000)
+            }
+
+            function notsosubmit() {
+            	document.getElementById('notso-search').submit();
+            	setTimeout(
+            		function () {
+            		document.getElementById('loading').innerHTML = 'Just a couple more seconds 😁';}, 2000)
+            }
+
+            function popsubmit() {
+            	document.getElementById('pop-search').submit();
+            	setTimeout(
+            		function () {
+            		document.getElementById('loading').innerHTML = 'Just a couple more seconds 😁';}, 2000)
+            }
+    </script>
 
 
 {% endblock %}

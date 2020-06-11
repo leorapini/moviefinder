@@ -68,6 +68,13 @@ footer
     margin-left: -3em;
 }
 
-
+.loading {
+    margin-top: -20px;
+    margin-bottom: 10px;
+    height: 30px;
+    font-size: 0.9em;
+    vertical-align: middle;
+    padding-bottom: 20px;
+}
 
 
