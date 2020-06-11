@@ -1,10 +1,11 @@
 import os
-import urllib.request
 
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request
-from bs4 import BeautifulSoup
 from datetime import datetime
+
+from helpers import coverlookup
+from coolness import votes, low_votes
 
 
 # Setup application
@@ -60,35 +61,13 @@ def genresearch():
 		coolness = request.form.get("coolness")
 
 		# Number of votes for database search based on coolness factor
-		coolness_votes = {"Popular": {
-									  "maxNumVotes": 100000000, 
-									  "minNumVotes": 300000, 
-									  "lowNumVotes": 200000},
-						  "Not So Popular": {
-									  "maxNumVotes": 300000, 
-									  "minNumVotes": 100000, 
-									  "lowNumVotes": 50000},
-						   "Lesser Known": {
-									  "maxNumVotes": 100000, 
-									  "minNumVotes": 60000, 
-									  "lowNumVotes": 30000}}
-
-		# Check if genre is Documentary or Western to adjust number of votes
 		if original_genre == "Documentary" or original_genre == "Western":
 
-			coolness_votes = {"Popular": {
-									  "maxNumVotes": 100000000, 
-									  "minNumVotes": 60000, 
-									  "lowNumVotes": 0},
-						  	  "Not So Popular": {
-									  "maxNumVotes": 60000, 
-									  "minNumVotes": 25000, 
-									  "lowNumVotes": 0},
-						   	  "Lesser Known": {
-									  "maxNumVotes": 25000, 
-									  "minNumVotes": 10000, 
-									  "lowNumVotes": 0}}
+			coolness_votes = low_votes
 
+		else:
+
+			coolness_votes = votes
 
 
 		# Query database for 12 top rated movies in original_genre
@@ -117,42 +96,8 @@ def genresearch():
 				                   maxNumVotes = coolness_votes[coolness]["maxNumVotes"])
 
 		
-
-		# Generate Movie Posters URLs
-		for movie in movies:
-
-			# Check if movie already doesn't have a poster
-			if movie["poster"] == "\\N":
-
-				# Define URL for BeautifulSoup 
-				url = "https://www.imdb.com/title/" + movie["tconst"] + "/"
-
-				# Create response variable for urllib request
-				with urllib.request.urlopen(url) as response:
-
-					# Variables for parsing
-					html = response.read()
-					soup = BeautifulSoup(html, 'html.parser')
-
-					try:
-
-						# Get image URL from html file
-						image_url = soup.find('div', class_='poster').a.img['src']
-
-						# Add poster key with url item do each movie list item
-						movie["poster"] = image_url
-
-						# Add poster URL to Database
-						db.execute("""UPDATE movies SET poster = :poster 
-									  WHERE tconst = :tconst""", 
-									  poster = image_url, tconst = movie["tconst"])
-
-					except AttributeError:
-
-						movie["poster"] = "/static/notfound.jpg"
-
-						pass
-
+		# Get movie covers
+		coverlookup(movies)
 
 		# Render template for results
 		return render_template("results.html", movies = movies, original_genre = original_genre, 
@@ -186,35 +131,14 @@ def crossgenre():
 		minNumVotes = 0
 		lowNumVotes = 0
 
-		# Number of votes for database search based on coolness factor
-		coolness_votes = {"Popular": {
-									  "maxNumVotes": 100000000, 
-									  "minNumVotes": 300000, 
-									  "lowNumVotes": 200000},
-						  "Not So Popular": {
-									  "maxNumVotes": 300000, 
-									  "minNumVotes": 100000, 
-									  "lowNumVotes": 50000},
-						   "Lesser Known": {
-									  "maxNumVotes": 100000, 
-									  "minNumVotes": 60000, 
-									  "lowNumVotes": 30000}}
-
 		# Check if genre is a low ranking gender to adjust number of votes
 		if original_genre == "Documentary" or original_genre == "Western" or original_genre == "Musical" or original_genre == "Sport" or original_genre == "War" or original_genre == "Animation":
 
-			coolness_votes = {"Popular": {
-									  "maxNumVotes": 100000000, 
-									  "minNumVotes": 60000, 
-									  "lowNumVotes": 0},
-						  	  "Not So Popular": {
-									  "maxNumVotes": 60000, 
-									  "minNumVotes": 25000, 
-									  "lowNumVotes": 0},
-						   	  "Lesser Known": {
-									  "maxNumVotes": 25000, 
-									  "minNumVotes": 10000, 
-									  "lowNumVotes": 0}}
+			coolness_votes = low_votes
+
+		else:
+
+			coolness_votes = votes
 
 		# List variable to store movie results
 		movies = []
@@ -304,38 +228,7 @@ def crossgenre():
 
 
 		# Generate Movie Posters URLs
-		for movie in movies:
-
-			# Check if movie already doesn't have a poster
-			if movie["poster"] == "\\N":
-
-				# Define URL for BeautifulSoup 
-				url = "https://www.imdb.com/title/" + movie["tconst"] + "/"
-
-				# Create response variable for urllib request
-				with urllib.request.urlopen(url) as response:
-
-					# Variables for parsing
-					html = response.read()
-					soup = BeautifulSoup(html, 'html.parser')
-
-					try:
-
-						# Get image URL from html file
-						image_url = soup.find('div', class_='poster').a.img['src']
-
-						# Add poster key with url item do each movie list item
-						movie["poster"] = image_url
-
-						# Add poster URL to Database
-						db.execute("UPDATE movies SET poster = :poster WHERE tconst = :tconst", 
-									poster = image_url, tconst = movie["tconst"])
-
-					except AttributeError:
-
-						movie["poster"] = "/static/notfound.jpg"
-
-						pass
+		coverlookup(movies)
 
 		# Render template for results
 		return render_template("crossgenres.html", movies = movies, original_genre = original_genre, 
@@ -379,18 +272,7 @@ def genremix():
 		coolness = request.form.get("coolness")
 
 		# Number of votes for database search based on coolness factor
-		coolness_votes = {"Popular": {
-									  "maxNumVotes": 100000000, 
-									  "minNumVotes": 60000, 
-									  "lowNumVotes": 0},
-						  	  "Not So Popular": {
-									  "maxNumVotes": 60000, 
-									  "minNumVotes": 25000, 
-									  "lowNumVotes": 0},
-						   	  "Lesser Known": {
-									  "maxNumVotes": 25000, 
-									  "minNumVotes": 10000, 
-									  "lowNumVotes": 0}}
+		coolness_votes = low_votes
 
 
 		if len(genremix) == 2:
@@ -437,39 +319,7 @@ def genremix():
 
 
 		# Generate Movie Posters URLs
-		for movie in movies:
-
-			# Check if movie already doesn't have a poster
-			if movie["poster"] == "\\N":
-
-				# Define URL for BeautifulSoup 
-				url = "https://www.imdb.com/title/" + movie["tconst"] + "/"
-
-				# Create response variable for urllib request
-				with urllib.request.urlopen(url) as response:
-
-					# Variables for parsing
-					html = response.read()
-					soup = BeautifulSoup(html, 'html.parser')
-
-					try:
-
-						# Get image URL from html file
-						image_url = soup.find('div', class_='poster').a.img['src']
-
-						# Add poster key with url item do each movie list item
-						movie["poster"] = image_url
-
-						# Add poster URL to Database
-						db.execute("UPDATE movies SET poster = :poster WHERE tconst = :tconst", 
-									poster = image_url, tconst = movie["tconst"])
-
-					except AttributeError:
-
-						movie["poster"] = "/static/notfound.jpg"
-
-						pass
-
+		coverlookup(movies)
 
 		return render_template("genremixed.html", genremix = genremix, coolness = coolness, movies = movies)
 
