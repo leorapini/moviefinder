@@ -2,7 +2,7 @@
 votes = {"Popular": {
 					  "maxNumVotes": 100000000, 
 					  "minNumVotes": 300000, 
-					  "lowNumVotes": 200000},
+					  "lowNumVotes": 100000},
 		  "Not So Popular": {
 					  "maxNumVotes": 300000, 
 					  "minNumVotes": 100000, 

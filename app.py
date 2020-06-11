@@ -2,7 +2,6 @@ import os
 
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request
-from datetime import datetime
 
 from helpers import coverlookup
 from coolness import votes, low_votes
@@ -14,31 +13,20 @@ app = Flask(__name__)
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
-@app.after_request
-def after_request(response):
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Expires"] = 0
-    response.headers["Pragma"] = "no-cache"
-    return response
-
-"""
 # Ensure responses are cached
 @app.after_request
 def after_request(response):
     response.headers["Cache-Control"] = "public, must-revalidate, max-age = 120"
     return response
-"""
 
 # Load database
 db = SQL("sqlite:///db/movies.db")
-
 
 # Index
 @app.route("/")
 def index():
 
 	return render_template("index.html")
-
 
 # About
 @app.route("/about")
@@ -61,7 +49,7 @@ def genresearch():
 		coolness = request.form.get("coolness")
 
 		# Number of votes for database search based on coolness factor
-		if original_genre == "Documentary" or original_genre == "Western":
+		if original_genre == "Documentary" or original_genre == "Western" or original_genre == "War" or original_genre == "Musical":
 
 			coolness_votes = low_votes
 
@@ -88,9 +76,9 @@ def genresearch():
 			movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
 								   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
 								   WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
-								   WHERE genre = :original_genre) AND ratings.averageRating > 6.0 
+								   WHERE genre = :original_genre) AND ratings.averageRating > 5.9 
 								   AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
-								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 15""", 
+								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 18""", 
 				                   original_genre = original_genre, minNumVotes = coolness_votes[coolness]["minNumVotes"] 
 				                   - coolness_votes[coolness]["lowNumVotes"], 
 				                   maxNumVotes = coolness_votes[coolness]["maxNumVotes"])
@@ -164,7 +152,7 @@ def crossgenre():
 										    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
 										    WHERE genre = :original_genre) AND movies.tconst 
 										    IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) 
-										    AND ratings.averageRating > 6.0 AND ratings.numVotes 
+										    AND ratings.averageRating > 5.9 AND ratings.numVotes 
 										    BETWEEN :minNumVotes AND :maxNumVotes 
 										    ORDER BY ratings.averageRating DESC, 
 										    ratings.numVotes ASC LIMIT 12""", 
@@ -180,10 +168,10 @@ def crossgenre():
 										    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
 										    WHERE genre = :original_genre) AND movies.tconst 
 										    IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) 
-										    AND ratings.averageRating > 6.0 AND ratings.numVotes 
+										    AND ratings.averageRating > 5.9 AND ratings.numVotes 
 										    BETWEEN :minNumVotes AND :maxNumVotes 
 										    ORDER BY ratings.averageRating DESC, 
-										    ratings.numVotes ASC LIMIT 9""", 
+										    ratings.numVotes ASC LIMIT 12""", 
 										    original_genre = original_genre, cgenre = cgenre["cgenre"], 
 										    minNumVotes = coolness_votes[coolness]["minNumVotes"] - coolness_votes[coolness]["lowNumVotes"], 
 										    maxNumVotes = coolness_votes[coolness]["maxNumVotes"])
@@ -234,6 +222,8 @@ def crossgenre():
 		return render_template("crossgenres.html", movies = movies, original_genre = original_genre, 
 							   genres = genres, coolness = coolness)
 
+
+
 	# If method = GET
 	else:
 
@@ -283,7 +273,7 @@ def genremix():
 										    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
 										    WHERE genre = :genre0) AND movies.tconst 
 										    IN (SELECT genres.tconst FROM genres WHERE genre = :genre1) 
-										    AND ratings.averageRating > 6.0 AND ratings.numVotes 
+										    AND ratings.averageRating > 5.9 AND ratings.numVotes 
 										    BETWEEN :minNumVotes AND :maxNumVotes 
 										    ORDER BY ratings.averageRating DESC, 
 										    ratings.numVotes ASC LIMIT 18""", 
@@ -332,13 +322,6 @@ def genremix():
 
 		# Render crossgenre template for search
 		return render_template("genremix.html", genres = genres)
-
-
-
-
-
-
-
 
 
 
