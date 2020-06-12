@@ -11,14 +11,9 @@ Finding a movie to watch is hard. We've all been there. According to IMDB, about
 
   - Through **Genre Search** you can find the highest rated movies by genre. 
   - **Cross Genre Search** helps you find movies by exploring the most common cross genres for each genre you select.
-  - **Genre Mix** is your opportunity to explore unique genre combinations such as this [one](http://leorapini.pythonanywhere.com/moviefinder/).
+  - **Genre Mix** is your opportunity to explore unique genre combinations.
 
 You may also choose between **Popular Films**, **Not so Popular Films**, and **Lesser Known Films**. These categories are based on the amount of votes each film has received on IMDB.
-
-
-## URL
-
-http://leorapini.pythonanywhere.com/moviefinder/
 
 
 ## Technologies
