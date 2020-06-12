@@ -1,6 +1,8 @@
 import os
 
-from cs50 import SQL
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+
 from flask import Flask, flash, redirect, render_template, request
 
 from helpers import coverlookup
@@ -19,8 +21,15 @@ def after_request(response):
     response.headers["Cache-Control"] = "public, must-revalidate, max-age = 120"
     return response
 
-# Load database
-db = SQL("sqlite:///db/movies.db")
+# Create Database engine
+engine = create_engine('sqlite:///db/movies.db')
+
+# Create a Database Scoped Session
+db = scoped_session(sessionmaker(bind=engine))
+
+@app.teardown_request
+def remove_session(ex=None):
+    db.remove()
 
 # Index
 @app.route("/")
@@ -59,33 +68,34 @@ def genresearch():
 
 
 		# Query database for 12 top rated movies in original_genre
-		movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
-			                   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
-			                   WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
-			                   WHERE genre = :original_genre) AND ratings.averageRating > 6.4 
-			                   AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes 
-			                   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 18""", 
-			                   original_genre = original_genre, minNumVotes = coolness_votes[coolness]["minNumVotes"], 
-			                   maxNumVotes = coolness_votes[coolness]["maxNumVotes"])
-
+		moviesdb = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
+	                   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
+	                   WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
+	                   WHERE genre = :genre AND ratings.averageRating > 6.4 
+	                   AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes)
+	                   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 18""", 
+	                   {"genre": original_genre, "minNumVotes": coolness_votes[coolness]["minNumVotes"], 
+	                   "maxNumVotes": coolness_votes[coolness]["maxNumVotes"]}).fetchall()
 
 		# Check lenght of movies 
-		if len(movies) < 18:
+		if len(moviesdb) < 18:
 
 			# Make search less restrictive
-			movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
-								   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
-								   WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
-								   WHERE genre = :original_genre) AND ratings.averageRating > 5.9 
-								   AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
-								   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 18""", 
-				                   original_genre = original_genre, minNumVotes = coolness_votes[coolness]["minNumVotes"] 
-				                   - coolness_votes[coolness]["lowNumVotes"], 
-				                   maxNumVotes = coolness_votes[coolness]["maxNumVotes"])
+			moviesdb = db.execute("""SELECT primaryTitle, movies.tconst, poster, numVotes, averageRating 
+						   FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
+						   WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
+						   WHERE genre = :genre) AND ratings.averageRating > 5.9 
+						   AND ratings.numVotes BETWEEN :minNumVotes AND :maxNumVotes
+						   ORDER BY ratings.averageRating DESC, ratings.numVotes ASC LIMIT 18""", 
+		                   {"genre": original_genre, 
+		                   	"minNumVotes": coolness_votes[coolness]["minNumVotes"] - coolness_votes[coolness]["lowNumVotes"], 
+		                    "maxNumVotes": coolness_votes[coolness]["maxNumVotes"]}).fetchall()
 
-		
-		# Get movie covers
-		coverlookup(movies)
+		# Empty list of movies for results
+		movies = []
+
+		# Generate Movie Posters URLs
+		coverlookup(moviesdb, movies)
 
 		# Render template for results
 		return render_template("results.html", movies = movies, original_genre = original_genre, 
@@ -94,8 +104,8 @@ def genresearch():
 	# Request method is GET
 	else:
 
-		# Search database for genres list
-		genres = db.execute("SELECT genre FROM genres GROUP BY genre")
+		# Execute SQL command
+		genres = db.execute("SELECT genre FROM genres GROUP BY genre").fetchall()
 
 		# Return genre search template
 		return render_template("genresearch.html", genres = genres)
@@ -129,7 +139,7 @@ def crossgenre():
 			coolness_votes = votes
 
 		# List variable to store movie results
-		movies = []
+		moviesdb = []
 
 		# List variable to store movies ids to avoid duplicates
 		movies_id = []
@@ -141,7 +151,7 @@ def crossgenre():
 		crossgenres = db.execute("""SELECT ogenre, cgenre, matches 
 									FROM crossgenre 
 									WHERE ogenre = :ogenre AND matches != 0 
-									ORDER BY matches DESC LIMIT 5""", ogenre = original_genre)
+									ORDER BY matches DESC LIMIT 5""", {"ogenre": original_genre}).fetchall()
 
 		# Loop over top 5 genre matches
 		for cgenre in crossgenres: 
@@ -156,25 +166,26 @@ def crossgenre():
 										    BETWEEN :minNumVotes AND :maxNumVotes 
 										    ORDER BY ratings.averageRating DESC, 
 										    ratings.numVotes ASC LIMIT 12""", 
-										    original_genre = original_genre, cgenre = cgenre["cgenre"], 
-										    minNumVotes = coolness_votes[coolness]["minNumVotes"], 
-										    maxNumVotes = coolness_votes[coolness]["maxNumVotes"])
+										    {"original_genre": original_genre, "cgenre": cgenre["cgenre"], 
+										    "minNumVotes": coolness_votes[coolness]["minNumVotes"], 
+										    "maxNumVotes": coolness_votes[coolness]["maxNumVotes"]}).fetchall()
+
 
 			# Check lenght of movies_in_genre
 			if len(movies_in_genre) < 6:
 
 				movies_in_genre = db.execute("""SELECT primaryTitle, movies.tconst, poster, averageRating 
-										    FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
-										    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
-										    WHERE genre = :original_genre) AND movies.tconst 
-										    IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) 
-										    AND ratings.averageRating > 5.9 AND ratings.numVotes 
-										    BETWEEN :minNumVotes AND :maxNumVotes 
-										    ORDER BY ratings.averageRating DESC, 
-										    ratings.numVotes ASC LIMIT 12""", 
-										    original_genre = original_genre, cgenre = cgenre["cgenre"], 
-										    minNumVotes = coolness_votes[coolness]["minNumVotes"] - coolness_votes[coolness]["lowNumVotes"], 
-										    maxNumVotes = coolness_votes[coolness]["maxNumVotes"])
+											    FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
+											    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
+											    WHERE genre = :original_genre) AND movies.tconst 
+											    IN (SELECT genres.tconst FROM genres WHERE genre = :cgenre) 
+											    AND ratings.averageRating > 5.9 AND ratings.numVotes 
+											    BETWEEN :minNumVotes AND :maxNumVotes 
+											    ORDER BY ratings.averageRating DESC, 
+											    ratings.numVotes ASC LIMIT 12""", 
+											    {"original_genre": original_genre, "cgenre": cgenre["cgenre"], 
+											    "minNumVotes": coolness_votes[coolness]["minNumVotes"] - coolness_votes[coolness]["lowNumVotes"], 
+											    "maxNumVotes": coolness_votes[coolness]["maxNumVotes"]}).fetchall()
 
 			# Check lenght of movies_in_genre
 			if len(movies_in_genre) != 0:
@@ -183,10 +194,10 @@ def crossgenre():
 				for movie in movies_in_genre:
 
 					# Check if movies list is empty
-					if len(movies) == 0:
+					if len(moviesdb) == 0:
 
 						# Append each item and add genre item
-						movies.append({'primaryTitle': movie["primaryTitle"], 'tconst': movie["tconst"],
+						moviesdb.append({'primaryTitle': movie["primaryTitle"], 'tconst': movie["tconst"],
 									   'poster': movie["poster"], 'genre': cgenre["cgenre"], 
 									   'averageRating': movie['averageRating']})
 
@@ -202,7 +213,7 @@ def crossgenre():
 						if movie['tconst'] not in movies_id:
 
 							# Append each item and add genre item
-							movies.append({'primaryTitle': movie["primaryTitle"], 'tconst': movie["tconst"],
+							moviesdb.append({'primaryTitle': movie["primaryTitle"], 'tconst': movie["tconst"],
 										   'poster': movie["poster"], 'genre': cgenre["cgenre"], 
 										   'averageRating': movie['averageRating']})
 
@@ -215,8 +226,11 @@ def crossgenre():
 								genres.append(cgenre["cgenre"])
 
 
+		# Empty list of movies for results
+		movies = []
+
 		# Generate Movie Posters URLs
-		coverlookup(movies)
+		coverlookup(moviesdb, movies)
 
 		# Render template for results
 		return render_template("crossgenres.html", movies = movies, original_genre = original_genre, 
@@ -228,7 +242,7 @@ def crossgenre():
 	else:
 
 		# Search database for genres list
-		genres = db.execute("SELECT genre FROM genres GROUP BY genre")
+		genres = db.execute("SELECT genre FROM genres GROUP BY genre").fetchall()
 
 		# Render crossgenre template for search
 		return render_template("crossgenre.html", genres = genres)
@@ -247,13 +261,11 @@ def genremix():
 		# Get user's genre choice from form
 		genremix = request.form.getlist("genres")
 
-		print(len(genremix))
-
 		# Check if user selected 2 or 3 genres
 		if len(genremix) != 2 and len(genremix) != 3:
 
 			# Search database for genres list
-			genres = db.execute("SELECT genre FROM genres GROUP BY genre")
+			genres = db.execute("SELECT genre FROM genres GROUP BY genre").fetchall()
 
 			whoops = "You must choose 2 or 3 genres."
 			return render_template("genremix.html", whoops = whoops, genres = genres)
@@ -268,48 +280,45 @@ def genremix():
 		if len(genremix) == 2:
 
 			# Query database for movies in original_genre matching each genre in top 5 LIMIT 4 movies per crossgenre
-			movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, averageRating 
-										    FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
-										    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
-										    WHERE genre = :genre0) AND movies.tconst 
-										    IN (SELECT genres.tconst FROM genres WHERE genre = :genre1) 
-										    AND ratings.averageRating > 5.9 AND ratings.numVotes 
-										    BETWEEN :minNumVotes AND :maxNumVotes 
-										    ORDER BY ratings.averageRating DESC, 
-										    ratings.numVotes ASC LIMIT 18""", 
-										    genre0 = genremix[0], genre1 = genremix[1], 
-										    minNumVotes = coolness_votes[coolness]["minNumVotes"], 
-										    maxNumVotes = coolness_votes[coolness]["maxNumVotes"])
+			moviesdb = db.execute("""SELECT primaryTitle, movies.tconst, poster, averageRating 
+								    FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
+								    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
+								    WHERE genre = :genre0) AND movies.tconst 
+								    IN (SELECT genres.tconst FROM genres WHERE genre = :genre1) 
+								    AND ratings.averageRating > 5.9 AND ratings.numVotes 
+								    BETWEEN :minNumVotes AND :maxNumVotes 
+								    ORDER BY ratings.averageRating DESC, 
+								    ratings.numVotes ASC LIMIT 18""", 
+								    {"genre0": genremix[0], "genre1": genremix[1], 
+								    "minNumVotes": coolness_votes[coolness]["minNumVotes"], 
+								    "maxNumVotes": coolness_votes[coolness]["maxNumVotes"]}).fetchall()
 
 
 		elif len(genremix) == 3:
 
 			# Query database for movies in original_genre matching each genre in top 5 LIMIT 4 movies per crossgenre
-			movies = db.execute("""SELECT primaryTitle, movies.tconst, poster, averageRating 
-										    FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
-										    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
-										    WHERE genre = :genre0) AND movies.tconst 
-										    IN (SELECT genres.tconst FROM genres WHERE genre = :genre1)
-										    AND movies.tconst IN (SELECT genres.tconst FROM genres 
-										    WHERE genre = :genre2)
-										    AND ratings.averageRating > 5.9 AND ratings.numVotes 
-										    BETWEEN :minNumVotes AND :maxNumVotes 
-										    ORDER BY ratings.averageRating DESC, 
-										    ratings.numVotes ASC LIMIT 18""", 
-										    genre0 = genremix[0], genre1 = genremix[1], 
-										    genre2 = genremix[2], 
-										    minNumVotes = coolness_votes[coolness]["minNumVotes"], 
-										    maxNumVotes = coolness_votes[coolness]["maxNumVotes"])
+			moviesdb = db.execute("""SELECT primaryTitle, movies.tconst, poster, averageRating 
+								    FROM movies JOIN ratings ON movies.tconst = ratings.tconst 
+								    WHERE movies.tconst IN (SELECT genres.tconst FROM genres 
+								    WHERE genre = :genre0) AND movies.tconst 
+								    IN (SELECT genres.tconst FROM genres WHERE genre = :genre1)
+								    AND movies.tconst IN (SELECT genres.tconst FROM genres 
+								    WHERE genre = :genre2)
+								    AND ratings.averageRating > 5.9 AND ratings.numVotes 
+								    BETWEEN :minNumVotes AND :maxNumVotes 
+								    ORDER BY ratings.averageRating DESC, 
+								    ratings.numVotes ASC LIMIT 18""", 
+								    {"genre0": genremix[0], "genre1": genremix[1], 
+								    "genre2": genremix[2], 
+								    "minNumVotes": coolness_votes[coolness]["minNumVotes"], 
+								    "maxNumVotes": coolness_votes[coolness]["maxNumVotes"]}).fetchall()
 
-		# If no movies were found
-		else:
 
-			# Return empty movies list
-			movies = []
-
+		# Empty list of movies for results
+		movies = []
 
 		# Generate Movie Posters URLs
-		coverlookup(movies)
+		coverlookup(moviesdb, movies)
 
 		return render_template("genremixed.html", genremix = genremix, coolness = coolness, movies = movies)
 
@@ -318,7 +327,7 @@ def genremix():
 	else:
 
 		# Search database for genres list
-		genres = db.execute("SELECT genre FROM genres GROUP BY genre")
+		genres = db.execute("SELECT genre FROM genres GROUP BY genre").fetchall()
 
 		# Render crossgenre template for search
 		return render_template("genremix.html", genres = genres)

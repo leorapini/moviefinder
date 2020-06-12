@@ -24,7 +24,7 @@ http://leorapini.pythonanywhere.com/moviefinder/
 ## Technologies
 
   - Python 3.7
-  - CS50's SQLite 3
+  - SQLite 3
   - Flask 
   - Jinja 2
   - JavaScript
@@ -34,6 +34,11 @@ http://leorapini.pythonanywhere.com/moviefinder/
 ## Todo
 
   - Add 'Movie Battle'
+
+
+## License
+
+Information courtesy of IMDb. Used with permission for personal use. 
 
 
 
