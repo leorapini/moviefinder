@@ -22,7 +22,7 @@ def after_request(response):
     return response
 
 # Create Database engine
-engine = create_engine('sqlite:///db/movies.db')
+engine = create_engine('postgres://tpflajgyklddkb:51c254e94d13e4191d66b81520edc11cb83327aba40e3a5baad74399a7df8d2d@ec2-3-231-16-122.compute-1.amazonaws.com:5432/dt25ea812kb1h')
 
 # Create a Database Scoped Session
 db = scoped_session(sessionmaker(bind=engine))

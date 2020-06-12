@@ -29,6 +29,7 @@ You may also choose between **Popular Films**, **Not so Popular Films**, and **L
 ## Todo
 
   - Add 'Movie Battle'
+  - Implement SQLAlchemy properly. It's embarrassing. 
 
 
 ## License
