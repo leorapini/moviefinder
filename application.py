@@ -32,13 +32,13 @@ def remove_session(ex=None):
     db.remove()
 
 # Index
-@app.route("/")
+@app.route("/", methods=['GET'])
 def index():
 
 	return render_template("index.html")
 
 # About
-@app.route("/about")
+@app.route("/about", methods=['GET'])
 def about():
 
 	return render_template("about.html")
