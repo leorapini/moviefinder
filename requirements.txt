@@ -2,5 +2,4 @@ gunicorn
 psycopg2
 sqlalchemy
 flask
-urllib.request
 bs4
