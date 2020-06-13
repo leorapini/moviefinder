@@ -1,3 +1,5 @@
 gunicorn
 psycopg2
 sqlalchemy
+os
+flask
