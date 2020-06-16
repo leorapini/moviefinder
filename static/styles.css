@@ -52,20 +52,20 @@ footer
 {
     margin-bottom: 50px;
     margin-top: -10px;
-    font-size: 1.2em;
+    font-size: 1.1em;
     font-weight: 300;
 }
 
 .col-8
 {
     text-align: left;
-    margin-left: 2em;
+    margin-left: 1.5em;
 }
 
 .col-2
 {
     text-align: left;
-    margin-left: -3em;
+    margin-left: -3.3em;
 }
 
 .loading {
@@ -78,8 +78,8 @@ footer
 }
 
 .content {
-    margin-left: 70px;
-    margin-right: 70px;
+    margin-left: 20px;
+    margin-right: 20px;
     text-align: left;
 }
 

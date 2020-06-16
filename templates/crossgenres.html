@@ -20,8 +20,8 @@
 							<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">
 							<img src="{{ movie['poster'] }}"></a>
 							<br>
-							<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">{{ movie["primaryTitle"] }}</a> 
-							(<strong>{{ movie["averageRating"] }}</strong>)
+							<a href="https://www.imdb.com/title/{{ movie['tconst'] }}" target="_blank">{{ movie['primarytitle'] }}</a> 
+							(<strong>{{ movie['averagerating'] }}</strong>)
 							{% set count.value = count.value + 1 %}
 						</td>
 					{% if count.value % 3 == 0 %}
@@ -31,6 +31,7 @@
 			{%- endfor %}
 			</tr>
 	</table>
+	<br>
 	{%- endfor %}
 	<br>
 	<form action="/crossgenre" id="pop-search" method="POST">
