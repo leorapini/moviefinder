@@ -15,6 +15,8 @@ Finding a movie to watch is hard. We've all been there. According to IMDB, about
 
 You may also choose between **Popular Films**, **Not so Popular Films**, and **Lesser Known Films**. These categories are based on the amount of votes each film has received on IMDB.
 
+## URL
+[https://moviefinderrr.herokuapp.com/](https://moviefinderrr.herokuapp.com/)
 
 ## Technologies
 
@@ -27,7 +29,8 @@ You may also choose between **Popular Films**, **Not so Popular Films**, and **L
 
  
 ## Todo
-
+  
+  - Fix buttons layout in result pages
   - Add 'Movie Battle'
   - Implement SQLAlchemy properly. It's embarrassing. 
 
