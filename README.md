@@ -25,7 +25,7 @@ You may also choose between **Popular Films**, **Not so Popular Films**, and **L
   - Flask 
   - Jinja 2
   - JavaScript
-  - Bootstrap 4
+  - Bootstrap 4*
 
  
 ## Todo
